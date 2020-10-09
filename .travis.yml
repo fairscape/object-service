@@ -9,14 +9,17 @@ services:
 before_install:
    - sudo apt-get update
    - sudo apt-get install python3 python3-pip build-essential
+   - sudo apt-get install -y git
 
 
 install:
    - pip3 install -r requirements.txt
    - pip3 install mock nose parameterized
+   - pip3 install git+https://github.com/fairscape/python-auth
 
 script:
   - cd app
+  - export NO_AUTH=True
   - python3 -m pytest -v tests/tests.py
 
 
