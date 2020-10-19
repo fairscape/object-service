@@ -41,8 +41,10 @@ def delete_identifier(ark,token = None):
 
     url = ORS_URL + ark
     r = requests.delete(url,headers={"Authorization": token})
-
-    return
+    if 'deleted' in r.json().keys():
+        return True
+    else:
+        return False
 
 def get_minio_location(meta,token):
 

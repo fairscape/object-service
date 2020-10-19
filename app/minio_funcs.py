@@ -25,6 +25,18 @@ def download_file(bucket,location):
     minioClient.download_file(bucket, location, '/' + file_name)
     return '/' + file_name
 
+def delete_file(bucket,location):
+    minioClient = boto3.client('s3',
+                        endpoint_url=MINIO_URL,
+                        aws_access_key_id=MINIO_KEY,
+                        aws_secret_access_key=MINIO_SECRET,
+                        region_name='us-east-1')
+    resp = minioClient.delete_object(bucket, location)
+    success = resp.get('DeleteMarker')
+
+    return success
+
+
 def file_location_taken(bucket,location):
     """return the False if no file exsists else True"""
     minioClient = boto3.client('s3',

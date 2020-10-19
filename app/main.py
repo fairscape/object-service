@@ -30,7 +30,7 @@ EVI_PREFIX = 'evi:'
 app.url_map.converters['everything'] = EverythingConverter
 
 @app.route('/data/<everything:ark>',methods = ['POST','GET','DELETE','PUT'])
-@check_token
+@user_level_permission
 def all(ark):
 
     logger.info('Object Service handling request %s', request)
@@ -101,6 +101,32 @@ def all(ark):
 
         return result
 
+    if flask.request.method == 'DELETE':
+
+        if not valid_ark(ark):
+            return flask.jsonify({"error":"Improperly formatted Identifier"}), 400
+
+        token = request.headers.get("Authorization")
+
+        ark_meta = retrieve_metadata(ark,token)
+        if ark_meta.get('@type') != 'Download':
+            return flask.jsonify({'deleted':False,'error':'Must pass specific distribution to delete.'})
+
+        minio_loc = ark_meta.get('name')
+        bucket = minio_loc.split('/')[0]
+        location = '/'.join(minio_loc.split('/')[1:])
+        try:
+            delete = delete_object(bucket,location)
+            if not delete:
+                return flask.jsonify({'deleted':False,'error':'Failed to delete.'}),500
+        except:
+            return flask.jsonify({'deleted':False,'error':'Failed to delete.'}),500
+        try:
+            delete_id = delete_identifer(ark,token)
+        except:
+            logger.error('Deleted file but failed to delete distribution id: %s', ark)
+            return return flask.jsonify({'deleted':True,'error':'Failed to delete id.'}),200
+        return  flask.jsonify('deleted':True)
 
     if flask.request.method == 'PUT':
 
